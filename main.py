@@ -63,7 +63,41 @@ class AudioRecorder(QMainWindow):
         widget = QWidget()
         widget.setLayout(layout)
         self.setCentralWidget(widget)
-        
+
+        # --- Styling ---
+        self.setStyleSheet("""
+            QMainWindow {
+                background-color: #f0f0f0;
+            }
+            QPushButton {
+                background-color: #4CAF50; /* Green */
+                border: none;
+                color: white;
+                padding: 10px 20px;
+                text-align: center;
+                text-decoration: none;
+                display: inline-block;
+                font-size: 14px;
+                margin: 4px 2px;
+                border-radius: 5px;
+            }
+            QPushButton:hover {
+                background-color: #3e8e41;
+            }
+            QTextEdit {
+                background-color: white;
+                border: 1px solid #ccc;
+                padding: 10px;
+                font-size: 14px;
+            }
+            QComboBox {
+                background-color: white;
+                border: 1px solid #ccc;
+                padding: 5px;
+                font-size: 14px;
+            }
+        """)
+
         # Dropdown for model selection
         self.model_selector = QComboBox(self)
         self.model_selector.addItem("llama3-70b-8192")
@@ -73,7 +107,7 @@ class AudioRecorder(QMainWindow):
         self.model_selector.addItem("gemini-1.5-flash")
         self.model_selector.addItem("gemini-1.5-pro")
         layout.addWidget(self.model_selector)
-        
+
         # Buttons
         self.record_button = QPushButton('Start Recording', self)
         self.record_button.clicked.connect(self.on_click_record)
@@ -83,7 +117,7 @@ class AudioRecorder(QMainWindow):
         self.stop_button.clicked.connect(self.on_click_stop)
         self.stop_button.setEnabled(False)
         layout.addWidget(self.stop_button)
-        
+
         self.play_button = QPushButton('Play Response Audio', self)
         self.play_button.clicked.connect(self.play_audio_response)
         self.play_button.setEnabled(False)
@@ -104,7 +138,7 @@ class AudioRecorder(QMainWindow):
         self.text_edit.setFont(font)
         
         layout.addWidget(self.text_edit)
-        
+
         self.show()
 
     @pyqtSlot()
@@ -136,20 +170,28 @@ class AudioRecorder(QMainWindow):
         stream = p.open(format=FORMAT, channels=CHANNELS, rate=RATE, input=True, frames_per_buffer=CHUNK)
         frames = []
 
-        while not self.stop_recording:
-            data = stream.read(CHUNK)
-            frames.append(data)
+        try:
+            while not self.stop_recording:
+                data = stream.read(CHUNK)
+                frames.append(data)
+        except Exception as e:
+            print(f"Error during recording: {e}")
+        finally:
+            stream.stop_stream()
+            stream.close()
+            p.terminate()
 
-        stream.stop_stream()
-        stream.close()
-        p.terminate()
-
-        wf = wave.open(filename, 'wb')
-        wf.setnchannels(CHANNELS)
-        wf.setsampwidth(p.get_sample_size(FORMAT))
-        wf.setframerate(RATE)
-        wf.writeframes(b''.join(frames))
-        wf.close()
+            # Check if any data was recorded
+            if frames:
+                wf = wave.open(filename, 'wb')
+                wf.setnchannels(CHANNELS)
+                wf.setsampwidth(p.get_sample_size(FORMAT))
+                wf.setframerate(RATE)
+                wf.writeframes(b''.join(frames))
+                wf.close()
+            else:
+                print("No audio data recorded, file not created.")
+    
 
     def transcribe_and_respond(self, filename):
         transcription = self.transcribe_audio(filename)
@@ -259,18 +301,8 @@ class AudioRecorder(QMainWindow):
         self.play_button.setEnabled(True)
         self.stop_play_button.setEnabled(False)
 
-    def _play_audio(self):
-        self.is_playing = True
-        self.stop_play_button.setEnabled(True)
-        self.tts_engine.connect('finished-utterance', self.on_finished_utterance)
-        self.tts_engine.say(self.response)
-        self.tts_engine.runAndWait()
-
-    def on_finished_utterance(self, name, completed):
-        self.is_playing = False
-        self.stop_play_button.setEnabled(False)
 
 if __name__ == '__main__':
-    app = QApplication(sys.argv)    
+    app = QApplication(sys.argv)
     ex = AudioRecorder()
     sys.exit(app.exec_())
