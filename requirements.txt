@@ -1,0 +1,6 @@
+pyaudio
+wave
+PyQt5
+pyttsx3
+groq
+google-generativeai
