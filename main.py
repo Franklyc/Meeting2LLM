@@ -88,7 +88,8 @@ class AudioRecorder(QMainWindow):
                 background-color: white;
                 border: 1px solid #ccc;
                 padding: 10px;
-                font-size: 14px;
+                font-size: 16px;
+                font-family: Arial, Helvetica, sans-serif;
             }
             QComboBox {
                 background-color: white;
