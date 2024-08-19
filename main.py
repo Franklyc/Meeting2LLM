@@ -10,6 +10,7 @@ from PyQt5.QtCore import pyqtSlot, QThread, pyqtSignal
 from groq import Groq
 import google.generativeai as genai
 import os
+import multiprocessing
 
 # Initialize Groq client
 client = Groq()
@@ -20,62 +21,33 @@ genai.configure(api_key=os.environ["GEMINI_API_KEY"])
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
-class TTSThread(QThread):
+
+def tts_process(text, stop_event):
     """
-    Thread for text-to-speech playback.
+    Function to run the TTS engine in a separate process.
+
+    Args:
+        text: The text to be spoken.
+        stop_event: A multiprocessing.Event object to signal when to stop playback.
     """
-    finished = pyqtSignal()  # Signal emitted when playback is finished
+    tts_engine = pyttsx3.init()
+    tts_engine.say(text)
+    try:
+        tts_engine.runAndWait()
+    except RuntimeError as e:  # Catch RuntimeError if the process is terminated prematurely
+        if "Process was terminated" in str(e):
+            logging.info("TTS process terminated.")
+        else:
+            logging.error(f"Error during TTS playback: {e}")
+    finally:
+        stop_event.set()  # Signal that the process has finished
 
-    def __init__(self, tts_engine, text):
-        """
-        Initialize the TTS thread.
-
-        Args:
-            tts_engine: The pyttsx3 TTS engine.
-            text: The text to be spoken.
-        """
-        super().__init__()
-        self.tts_engine = tts_engine
-        self.text = text
-        self.is_stopped = False  # Flag to indicate if playback is stopped
-
-    def run(self):
-        """
-        Run the TTS playback.
-        """
-        self.tts_engine.connect('started-word', self.check_stop)  # Connect to check for stop signal
-        self.tts_engine.say(self.text)  # Speak the text
-        self.tts_engine.runAndWait()  # Wait for playback to finish
-        if not self.is_stopped:
-            self.finished.emit()  # Emit finished signal if not stopped
-
-    def stop(self):
-        """
-        Stop the TTS playback.
-        """
-        self.is_stopped = True
-        self.tts_engine.stop()
-
-    def check_stop(self, name, location, length):
-        """
-        Check if playback should be stopped.
-
-        Args:
-            name: Name of the word being spoken.
-            location: Location of the word in the text.
-            length: Length of the word.
-
-        Returns:
-            True if playback should continue, False otherwise.
-        """
-        if self.is_stopped:
-            return False
-        return True
 
 class AudioRecorder(QMainWindow):
     """
     Main window for audio recording, transcription, and LLM response.
     """
+
     def __init__(self):
         """
         Initialize the main window.
@@ -87,10 +59,10 @@ class AudioRecorder(QMainWindow):
         self.width = 400  # Window size
         self.height = 600
         self.initUI()  # Initialize the user interface
-        self.tts_engine = pyttsx3.init()  # Initialize the TTS engine
-        self.tts_thread = None  # Thread for TTS playback
+        self.tts_process = None  # Process for TTS playback
         self.is_playing = False  # Flag to indicate if audio is being played
-        self.response = None # Initialize response attribute
+        self.response = None  # Initialize response attribute
+        self.stop_event = None  # Event to signal TTS process to stop
 
     def initUI(self):
         """
@@ -100,7 +72,7 @@ class AudioRecorder(QMainWindow):
         self.setGeometry(self.left, self.top, self.width, self.height)
         # Set window icon
         self.setWindowIcon(QIcon('M2L_icon.png'))
-        
+
         # Main layout and widget
         layout = QVBoxLayout()  # Vertical layout for widgets
         widget = QWidget()
@@ -190,12 +162,12 @@ class AudioRecorder(QMainWindow):
         # Text edit for transcription and LLM response
         self.text_edit = QTextEdit(self)  # Text edit area for displaying text
         self.text_edit.setPlaceholderText("Transcription and LLM responses will appear here.")  # Set placeholder text
-        
+
         # Set font size for QTextEdit
         font = QFont()
         font.setPointSize(12)
         self.text_edit.setFont(font)
-        
+
         layout.addWidget(self.text_edit)  # Add text edit area to layout
 
         self.show()  # Show the window
@@ -210,7 +182,8 @@ class AudioRecorder(QMainWindow):
         self.stop_button.setEnabled(True)  # Enable stop button
         self.play_button.setEnabled(False)  # Disable play button
         self.stop_play_button.setEnabled(False)  # Disable stop playback button
-        self.record_thread = threading.Thread(target=self.record_audio, args=("meeting_audio.wav",))  # Create recording thread
+        self.record_thread = threading.Thread(target=self.record_audio,
+                                               args=("meeting_audio.wav",))  # Create recording thread
         self.record_thread.start()  # Start recording thread
 
     @pyqtSlot()
@@ -238,7 +211,8 @@ class AudioRecorder(QMainWindow):
         RATE = 44100  # Audio sample rate
 
         p = pyaudio.PyAudio()  # Initialize PyAudio
-        stream = p.open(format=FORMAT, channels=CHANNELS, rate=RATE, input=True, frames_per_buffer=CHUNK)  # Open audio stream
+        stream = p.open(format=FORMAT, channels=CHANNELS, rate=RATE, input=True,
+                         frames_per_buffer=CHUNK)  # Open audio stream
         frames = []  # List to store recorded audio frames
 
         try:
@@ -262,7 +236,6 @@ class AudioRecorder(QMainWindow):
                 wf.close()  # Close WAV file
             else:
                 print("No audio data recorded, file not created.")  # Print message if no data was recorded
-    
 
     def transcribe_and_respond(self, filename):
         """
@@ -285,9 +258,11 @@ class AudioRecorder(QMainWindow):
         try:
             transcription = self.transcribe_audio(filename)  # Transcribe the audio
             logging.info("Transcription completed.")  # Log transcription completion
-            self.text_edit.append("Transcription:\n" + transcription + "\n\n")  # Append transcription to text edit area
+            self.text_edit.append(
+                "Transcription:\n" + transcription + "\n\n")  # Append transcription to text edit area
 
-            self.response = self.get_llm_response(transcription)  # Generate LLM response
+            self.response = self.get_llm_response(
+                transcription)  # Generate LLM response and store it
             logging.info("LLM response generated.")  # Log response generation
             self.text_edit.append("LLM Response:\n" + self.response + "\n")  # Append response to text edit area
             self.play_button.setEnabled(True)  # Enable play button
@@ -326,10 +301,12 @@ class AudioRecorder(QMainWindow):
         system_prompt = self.system_prompt_input.text()  # Retrieve system prompt
 
         if selected_model.startswith("gemini"):  # Check if the selected model is a Gemini model
-            response = self.get_gemini_response(transcription, selected_model, system_prompt)  # Get Gemini response
+            response = self.get_gemini_response(transcription, selected_model,
+                                                 system_prompt)  # Get Gemini response
         else:
-            response = self.get_groq_response(transcription, selected_model, system_prompt)  # Get Groq response
-        
+            response = self.get_groq_response(transcription, selected_model,
+                                                 system_prompt)  # Get Groq response
+
         return response  # Return the LLM response
 
     def get_groq_response(self, transcription, model_name, system_prompt):
@@ -373,7 +350,7 @@ class AudioRecorder(QMainWindow):
             stream=True,  # Stream the response
             stop=None,  # Stop sequence for response generation
         )
-        
+
         response = ""  # Initialize an empty string to store the response
         for chunk in completion:  # Iterate through the streamed response chunks
             content = chunk.choices[0].delta.content or ""  # Extract the content from the chunk
@@ -423,35 +400,49 @@ class AudioRecorder(QMainWindow):
 
     def play_audio_response(self):
         """
-        Play the LLM response audio.
+        Play the LLM response audio in a separate process.
         """
-        if self.tts_thread and self.tts_thread.isRunning():  # Check if TTS thread is already running
-            return  # Do nothing if TTS thread is already running
-        
-        self.tts_thread = TTSThread(self.tts_engine, self.response)  # Create a new TTS thread
-        self.tts_thread.finished.connect(self.on_tts_finished)  # Connect finished signal to handler
-        self.tts_thread.start()  # Start the TTS thread
-        
+        if self.is_playing:  # Check if audio is already playing
+            return  # Do nothing if audio is already playing
+
+        self.stop_event = multiprocessing.Event()  # Create an event to signal the process to stop
+        self.tts_process = multiprocessing.Process(target=tts_process,
+                                                   args=(self.response, self.stop_event))  # Create a new process for TTS playback
+        self.tts_process.start()  # Start the TTS process
+
         self.is_playing = True  # Set audio playing flag
         self.play_button.setEnabled(False)  # Disable play button
         self.stop_play_button.setEnabled(True)  # Enable stop playback button
+
+        # Create a timer to check if the process has finished
+        self.timer = threading.Timer(0.1, self.check_tts_process)  # Check every 0.1 seconds
+        self.timer.start()
 
     def stop_audio_response(self):
         """
         Stop the LLM response audio playback.
         """
-        if self.tts_thread and self.tts_thread.isRunning():  # Check if TTS thread is running
-            self.tts_thread.stop()  # Stop the TTS thread
-            self.tts_thread.wait()  # Wait for the thread to finish
-            self.on_tts_finished()  # Call finished signal handler
+        if self.tts_process and self.tts_process.is_alive():  # Check if the TTS process is running
+            self.tts_process.terminate()  # Terminate the process
+            self.stop_event.set()  # Set the stop event
+            self.tts_process = None  # Reset the process variable
 
-    def on_tts_finished(self):
+            self.is_playing = False  # Clear audio playing flag
+            self.play_button.setEnabled(True)  # Enable play button
+            self.stop_play_button.setEnabled(False)  # Disable stop playback button
+
+    def check_tts_process(self):
         """
-        Handle the TTS playback finished signal.
+        Check if the TTS process has finished and update the GUI accordingly.
         """
-        self.is_playing = False  # Clear audio playing flag
-        self.play_button.setEnabled(True)  # Enable play button
-        self.stop_play_button.setEnabled(False)  # Disable stop playback button
+        if self.stop_event.is_set():
+            self.is_playing = False  # Clear audio playing flag
+            self.play_button.setEnabled(True)  # Enable play button
+            self.stop_play_button.setEnabled(False)  # Disable stop playback button
+            self.timer.cancel()  # Stop the timer
+        else:
+            self.timer = threading.Timer(0.1, self.check_tts_process)  # Schedule the next check
+            self.timer.start()
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)  # Create QApplication instance
