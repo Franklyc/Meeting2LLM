@@ -1,22 +1,33 @@
 # Meeting2LLM
 
-This application allows you to record audio, transcribe it, and get a response from a large language model (LLM). It utilizes Groq's Whisper API for transcription and offers a selection of LLMs from both Groq and Google Gemini.
+This application allows you to record audio, transcribe it, and get a response from a large language model (LLM). It utilizes Groq's Whisper API for transcription and offers a selection of LLMs from both [Groq](https://groq.com/) and [Google Gemini](https://developers.generativeai.google/).
 
 ## Features
 
 * **Record audio:** Capture audio input using your microphone.
 * **Transcribe audio:** Transcribe the recorded audio using Groq's Whisper API.
 * **LLM Response:** Generate a response to the transcribed text using a selected LLM.
-* **Model Selection:** Choose from a variety of LLMs, including:
-    * Groq Models:
-        * llama3-70b-8192
-        * llama-3.1-70b-versatile
-        * mixtral-8x7b-32768
-        * gemma2-9b-it
-    * Google Gemini Models:
-        * gemini-1.5-flash
-        * gemini-1.5-pro
+* **Model Selection:** Choose from a variety of LLMs:
+
+| Model Provider | Model Name                | Max Tokens |
+|----------------|---------------------------|------------|
+| Groq           | llama3-70b-8192          | 8192       |
+| Groq           | llama-3.1-70b-versatile   | 8000       |
+| Groq           | mixtral-8x7b-32768       | 32768      |
+| Groq           | gemma2-9b-it             | 8192       |
+| Google Gemini | gemini-1.5-flash         | 8192       |
+| Google Gemini | gemini-1.5-pro           | 8192       |
+
+* **Customizable System Prompt:** Define your own system prompt to guide the LLM's responses.
 * **Text-to-Speech:** Listen to the LLM's response using text-to-speech functionality.
+
+## Roadmap
+
+* **Improved TTS Engine:** Evaluate and integrate a more robust and feature-rich TTS engine for better voice quality and performance.
+* **Batch Processing:** Add support for transcribing and generating responses for multiple audio files in batch mode.
+* **GUI Enhancements:** Improve the user interface with features like progress bars, audio visualization, and more customization options.
+* **Cloud Integration:** Explore integration with cloud storage services to allow users to upload and manage audio files.
+* **Offline Mode:** Investigate the feasibility of enabling offline transcription and response generation for specific models.
 
 ## Prerequisites
 
@@ -51,5 +62,8 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## Acknowledgments
 
-* Groq: [https://groq.com/](https://groq.com/)
-* Google Gemini: [https://developers.generativeai.google/](https://developers.generativeai.google/)
+* [Groq](https://groq.com/)
+* [Google Gemini](https://developers.generativeai.google/)
+* [pyttsx3](https://pyttsx3.readthedocs.io/en/latest/) (Text-to-Speech library)
+* [PyQt5](https://pypi.org/project/PyQt5/) (GUI framework)
+* [PyAudio](https://pypi.org/project/PyAudio/) (Audio recording library)

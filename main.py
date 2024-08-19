@@ -21,7 +21,6 @@ genai.configure(api_key=os.environ["GEMINI_API_KEY"])
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
-
 def tts_process(text, stop_event):
     """
     Function to run the TTS engine in a separate process.
@@ -30,7 +29,7 @@ def tts_process(text, stop_event):
         text: The text to be spoken.
         stop_event: A multiprocessing.Event object to signal when to stop playback.
     """
-    tts_engine = pyttsx3.init()
+    tts_engine = pyttsx3.init() # Initialize tts_engine inside the function
     tts_engine.say(text)
     try:
         tts_engine.runAndWait()
@@ -406,8 +405,8 @@ class AudioRecorder(QMainWindow):
             return  # Do nothing if audio is already playing
 
         self.stop_event = multiprocessing.Event()  # Create an event to signal the process to stop
-        self.tts_process = multiprocessing.Process(target=tts_process,
-                                                   args=(self.response, self.stop_event))  # Create a new process for TTS playback
+        self.tts_process = multiprocessing.Process(target=tts_process, 
+                                                   args=(self.response, self.stop_event)) # Remove tts_engine from arguments
         self.tts_process.start()  # Start the TTS process
 
         self.is_playing = True  # Set audio playing flag
