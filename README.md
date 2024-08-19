@@ -6,7 +6,6 @@ This application allows you to record audio, transcribe it, and get a response f
 [![GitHub forks](https://img.shields.io/github/forks/your-username/meeting2LLM?style=social)](https://github.com/your-username/meeting2LLM/fork)
 [![License](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 [![Python](https://img.shields.io/badge/python-3.7+-blue.svg)](https://www.python.org/)
-[![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 
 ## Features
 
@@ -35,8 +34,8 @@ This application allows you to record audio, transcribe it, and get a response f
 * **Cloud Integration:** Explore integration with cloud storage services to allow users to upload and manage audio files.
 * **Offline Mode:** Investigate the feasibility of enabling offline transcription and response generation for specific models.
 
-[![GitHub stats](https://github-readme-stats.vercel.app/api?username=your-username&show_icons=true&theme=radical)](https://github.com/anuraghazra/github-readme-stats)
-[![GitHub Streak](https://github-readme-streak-stats.herokuapp.com/?user=your-username)](https://git.io/streak-stats)
+[![GitHub stats](https://github-readme-stats.vercel.app/api?username=Franklyc&show_icons=true&theme=radical)](https://github.com/anuraghazra/github-readme-stats)
+[![GitHub Streak](https://github-readme-streak-stats.herokuapp.com/?user=Franklyc)](https://git.io/streak-stats)
 
 ## Prerequisites
 
