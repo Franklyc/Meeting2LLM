@@ -73,5 +73,5 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 * **[Groq](https://groq.com/)** <a href='https://github.com/groq/groq-python'><img src='https://img.shields.io/github/stars/groq/groq-python'></a> (Groq Python library)
 * **[Google Gemini](https://developers.generativeai.google/)** <a href='https://github.com/google-gemini/generative-ai-python'><img src='https://img.shields.io/github/stars/google-gemini/generative-ai-python'></a> (Google Gemini Python library)
 * **[pyttsx3](https://pyttsx3.readthedocs.io/en/latest/)** <a href='https://github.com/nateshmbhat/pyttsx3'><img src='https://img.shields.io/github/stars/nateshmbhat/pyttsx3'></a> (Text-to-Speech library)
-* **[PyQt5](https://pypi.org/project/PyQt5/)** <a href='https://github.com/riverbankcomputing/pyqt'><img src='https://img.shields.io/github/stars/riverbankcomputing/pyqt'></a> (GUI framework)
+* **[PyQt5](https://pypi.org/project/PyQt5/)** <a href='[https://github.com/riverbankcomputing/pyqt](https://github.com/pyqt/python-qt5)'><img src='https://img.shields.io/github/stars/pyqt/python-qt5'></a> (GUI framework)
 * **[PyAudio](https://pypi.org/project/PyAudio/)** <a href='https://github.com/intxcc/pyaudio_portaudio'><img src='https://img.shields.io/github/stars/intxcc/pyaudio_portaudio'></a> (Audio recording library, linking to a popular fork) 
