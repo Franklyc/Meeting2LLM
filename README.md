@@ -15,8 +15,8 @@ This application allows you to record audio, transcribe it, and get a response f
 | Groq           | llama-3.1-70b-versatile   | 8000       |
 | Groq           | mixtral-8x7b-32768       | 32768      |
 | Groq           | gemma2-9b-it             | 8192       |
-| Google Gemini | gemini-1.5-flash         | 8192       |
-| Google Gemini | gemini-1.5-pro           | 8192       |
+| Google Gemini | gemini-1.5-flash         | 8192 (output)      |
+| Google Gemini | gemini-1.5-pro           | 8192 (output)      |
 
 * **Customizable System Prompt:** Define your own system prompt to guide the LLM's responses.
 * **Text-to-Speech:** Listen to the LLM's response using text-to-speech functionality.
