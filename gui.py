@@ -33,6 +33,8 @@ class Worker(QObject):  # Define a worker class to handle the transcription and 
             self.finished.emit()  # Emit signal indicating the worker is finished
         except Exception as e:
             logging.error(f"Error during transcription or response generation: {e}")  # Log error
+        finally:
+            self.finished.emit()  # Emit signal indicating the worker is finished
 
     def get_llm_response(self, transcription):
         selected_model = self.parent().model_selector.currentText()  # Get the selected LLM model from the main window
@@ -63,6 +65,7 @@ class AudioRecorder(QMainWindow):
         self.tts_engine = pyttsx3.init()  # Initialize the TTS engine
         self.tts_thread = None  # Thread for TTS playback
         self.is_playing = False  # Flag to indicate if audio is being played
+        self.stop_recording = False  # Flag to signal recording to stop
 
     def initUI(self):
         """
@@ -177,13 +180,13 @@ class AudioRecorder(QMainWindow):
         """
         Handle the 'Start Recording' button click.
         """
+        logging.info("Start Recording button clicked.")
         self.text_edit.clear()  # Clear the text edit area
         self.record_button.setEnabled(False)  # Disable record button
         self.stop_button.setEnabled(True)  # Enable stop button
         self.play_button.setEnabled(False)  # Disable play button
         self.stop_play_button.setEnabled(False)  # Disable stop playback button
-        self.record_thread = threading.Thread(target=self.record_audio,
-                                               args=("meeting_audio.wav",))  # Create recording thread
+        self.record_thread = threading.Thread(target=self.record_audio, args=("meeting_audio.wav",))  # Create recording thread
         self.record_thread.start()  # Start recording thread
 
     @pyqtSlot()
@@ -191,6 +194,7 @@ class AudioRecorder(QMainWindow):
         """
         Handle the 'Stop Recording' button click.
         """
+        logging.info("Stop Recording button clicked.")
         self.stop_recording = True  # Set stop recording flag
         self.record_button.setEnabled(True)  # Enable record button
         self.stop_button.setEnabled(False)  # Disable stop button
@@ -204,7 +208,9 @@ class AudioRecorder(QMainWindow):
         Args:
             filename: The name of the WAV file to save the recording to.
         """
-        record_audio(filename)  # Call the record_audio function from audio_recording.py
+        logging.info(f"Recording audio to {filename}...")
+        record_audio(filename, self.stop_recording)  # Call the record_audio function from audio_recording.py
+        logging.info(f"Finished recording audio to {filename}.")
 
     def transcribe_and_respond(self, filename):
         """
