@@ -90,6 +90,7 @@ class AudioRecorder(QMainWindow):
         self.tts_engine = pyttsx3.init()  # Initialize the TTS engine
         self.tts_thread = None  # Thread for TTS playback
         self.is_playing = False  # Flag to indicate if audio is being played
+        self.response = None # Initialize response attribute
 
     def initUI(self):
         """
@@ -286,9 +287,9 @@ class AudioRecorder(QMainWindow):
             logging.info("Transcription completed.")  # Log transcription completion
             self.text_edit.append("Transcription:\n" + transcription + "\n\n")  # Append transcription to text edit area
 
-            response = self.get_llm_response(transcription)  # Generate LLM response
+            self.response = self.get_llm_response(transcription)  # Generate LLM response
             logging.info("LLM response generated.")  # Log response generation
-            self.text_edit.append("LLM Response:\n" + response + "\n")  # Append response to text edit area
+            self.text_edit.append("LLM Response:\n" + self.response + "\n")  # Append response to text edit area
             self.play_button.setEnabled(True)  # Enable play button
         except Exception as e:
             logging.error(f"Error during transcription or response generation: {e}")  # Log error
