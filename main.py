@@ -3,6 +3,7 @@ import wave
 import pyaudio
 import threading
 import pyttsx3
+import logging
 from PyQt5.QtWidgets import QApplication, QMainWindow, QPushButton, QTextEdit, QVBoxLayout, QWidget, QComboBox, QLabel, QLineEdit
 from PyQt5.QtGui import QFont, QIcon
 from PyQt5.QtCore import pyqtSlot, QThread, pyqtSignal
@@ -15,6 +16,9 @@ client = Groq()
 
 # Configure Gemini API
 genai.configure(api_key=os.environ["GEMINI_API_KEY"])
+
+# Configure logging
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 class TTSThread(QThread):
     finished = pyqtSignal()
@@ -212,11 +216,22 @@ class AudioRecorder(QMainWindow):
     
 
     def transcribe_and_respond(self, filename):
-        transcription = self.transcribe_audio(filename)
-        self.text_edit.append("Transcription:\n" + transcription + "\n\n")
-        self.response = self.get_llm_response(transcription)
-        self.text_edit.append("LLM Response:\n" + self.response + "\n")
-        self.play_button.setEnabled(True)
+        # Create a separate thread for transcription and response generation
+        self.processing_thread = threading.Thread(target=self._transcribe_and_respond, args=(filename,))
+        self.processing_thread.start()
+
+    def _transcribe_and_respond(self, filename):
+        try:
+            transcription = self.transcribe_audio(filename)
+            logging.info("Transcription completed.")
+            self.text_edit.append("Transcription:\n" + transcription + "\n\n")
+
+            response = self.get_llm_response(transcription)
+            logging.info("LLM response generated.")
+            self.text_edit.append("LLM Response:\n" + response + "\n")
+            self.play_button.setEnabled(True)
+        except Exception as e:
+            logging.error(f"Error during transcription or response generation: {e}")
 
     def transcribe_audio(self, filename):
         with open(filename, "rb") as file:
