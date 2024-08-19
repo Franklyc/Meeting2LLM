@@ -4,7 +4,7 @@ import pyaudio
 import threading
 import pyttsx3
 from PyQt5.QtWidgets import QApplication, QMainWindow, QPushButton, QTextEdit, QVBoxLayout, QWidget, QComboBox, QLabel, QLineEdit
-from PyQt5.QtGui import QFont
+from PyQt5.QtGui import QFont, QIcon
 from PyQt5.QtCore import pyqtSlot, QThread, pyqtSignal
 from groq import Groq
 import google.generativeai as genai
@@ -44,7 +44,7 @@ class TTSThread(QThread):
 class AudioRecorder(QMainWindow):
     def __init__(self):
         super().__init__()
-        self.title = 'Audio Recorder and Transcriber'
+        self.title = 'Meeting2LLM'
         self.left = 100
         self.top = 100
         self.width = 400
@@ -57,6 +57,8 @@ class AudioRecorder(QMainWindow):
     def initUI(self):
         self.setWindowTitle(self.title)
         self.setGeometry(self.left, self.top, self.width, self.height)
+        # Set window icon
+        self.setWindowIcon(QIcon('M2L_icon.png'))
         
         # Main layout and widget
         layout = QVBoxLayout()
