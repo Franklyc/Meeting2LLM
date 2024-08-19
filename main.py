@@ -3,7 +3,7 @@ import wave
 import pyaudio
 import threading
 import pyttsx3
-from PyQt5.QtWidgets import QApplication, QMainWindow, QPushButton, QTextEdit, QVBoxLayout, QWidget, QComboBox
+from PyQt5.QtWidgets import QApplication, QMainWindow, QPushButton, QTextEdit, QVBoxLayout, QWidget, QComboBox, QLabel, QLineEdit
 from PyQt5.QtGui import QFont
 from PyQt5.QtCore import pyqtSlot, QThread, pyqtSignal
 from groq import Groq
@@ -97,7 +97,22 @@ class AudioRecorder(QMainWindow):
                 padding: 5px;
                 font-size: 14px;
             }
+            QLineEdit {
+                background-color: white;
+                border: 1px solid #ccc;
+                padding: 5px;
+                font-size: 14px;
+            }
         """)
+
+        # --- System Prompt Input ---
+        self.system_prompt_label = QLabel("System Prompt:", self)
+        layout.addWidget(self.system_prompt_label)
+
+        self.system_prompt_input = QLineEdit(self)
+        default_prompt = "You are an experienced professional. Please respond to the following interview question in a first-person, detailed, and professional manner."
+        self.system_prompt_input.setText(default_prompt)
+        layout.addWidget(self.system_prompt_input)
 
         # Dropdown for model selection
         self.model_selector = QComboBox(self)
@@ -212,24 +227,33 @@ class AudioRecorder(QMainWindow):
 
     def get_llm_response(self, transcription):
         selected_model = self.model_selector.currentText()
+        system_prompt = self.system_prompt_input.text()  # Retrieve system prompt
 
         if selected_model.startswith("gemini"):
-            response = self.get_gemini_response(transcription, selected_model)
+            response = self.get_gemini_response(transcription, selected_model, system_prompt)
         else:
-            response = self.get_groq_response(transcription, selected_model)
+            response = self.get_groq_response(transcription, selected_model, system_prompt)
         
         return response
 
-    def get_groq_response(self, transcription, model_name):
+    def get_groq_response(self, transcription, model_name, system_prompt):
+        # Dictionary for model max tokens
+        MODEL_MAX_TOKENS = {
+            "llama3-70b-8192": 8192,
+            "llama-3.1-70b-versatile": 8000,
+            "mixtral-8x7b-32768": 32768,
+            "gemma2-9b-it": 8192,
+        }
+
         # Determine the correct max_tokens based on the selected model
-        max_tokens = 8192 if model_name in ["llama3-70b-8192", "gemma2-9b-it"] else 8000
+        max_tokens = MODEL_MAX_TOKENS.get(model_name, 8000)  # Default to 8000 if not found
 
         completion = client.chat.completions.create(
             model=model_name,
             messages=[
                 {
                     "role": "system",
-                    "content": "You are an experienced professional. Please respond to the following interview question in a first-person, detailed, and professional manner."
+                    "content": system_prompt  # Use the provided system prompt
                 },
                 {
                     "role": "user",
@@ -249,7 +273,7 @@ class AudioRecorder(QMainWindow):
             response += content
         return response
 
-    def get_gemini_response(self, transcription, model_name):
+    def get_gemini_response(self, transcription, model_name, system_prompt):
         generation_config = {
             "temperature": 1,
             "top_p": 0.95,
@@ -261,7 +285,7 @@ class AudioRecorder(QMainWindow):
         model = genai.GenerativeModel(
             model_name=model_name,
             generation_config=generation_config,
-            system_instruction="You are an experienced professional. Please respond to the following interview question in a first-person, detailed, and professional manner.",
+            system_instruction=system_prompt,  # Use the provided system prompt
         )
 
         chat_session = model.start_chat(
