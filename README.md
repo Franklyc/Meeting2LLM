@@ -52,7 +52,7 @@ This application allows you to record audio, transcribe it, and get a response f
 
 ## Installation
 
-1. Clone the repository: `git clone https://github.com/your-username/meeting2LLM.git`
+1. Clone the repository: `git clone https://github.com/Franklyc/meeting2LLM.git`
 2. Install the required packages: `pip install -r requirements.txt`
 3. Set the environment variables for your Groq and Google Gemini API keys.
 
