@@ -4,7 +4,7 @@ import pyaudio
 import threading
 import pyttsx3
 import logging
-from PyQt5.QtWidgets import QApplication, QMainWindow, QPushButton, QTextEdit, QVBoxLayout, QWidget, QComboBox, QLabel, QLineEdit
+from PyQt5.QtWidgets import QApplication, QMainWindow, QPushButton, QTextEdit, QVBoxLayout, QWidget, QComboBox, QLabel, QLineEdit, QSpacerItem, QSizePolicy
 from PyQt5.QtGui import QFont, QIcon
 from PyQt5.QtCore import pyqtSlot, QThread, pyqtSignal
 from groq import Groq
@@ -81,43 +81,51 @@ class AudioRecorder(QMainWindow):
         # --- Styling ---
         self.setStyleSheet("""
             QMainWindow {
-                background-color: #f0f0f0;
+                background-color: #f8f8f8; /* Light gray background */
             }
             QPushButton {
-                background-color: #4CAF50; /* Green */
+                background-color: #2196F3; /* Blue */
                 border: none;
                 color: white;
-                padding: 10px 20px;
+                padding: 12px 24px;
                 text-align: center;
                 text-decoration: none;
                 display: inline-block;
-                font-size: 14px;
-                margin: 4px 2px;
-                border-radius: 5px;
+                font-size: 16px;
+                margin: 8px 4px;
+                border-radius: 8px;
             }
             QPushButton:hover {
-                background-color: #3e8e41;
+                background-color: #1976D2; /* Darker blue on hover */
             }
             QTextEdit {
                 background-color: white;
-                border: 1px solid #ccc;
-                padding: 10px;
-                font-size: 16px;
+                border: 1px solid #ddd; /* Lighter border */
+                padding: 12px;
+                font-size: 14px;
                 font-family: Arial, Helvetica, sans-serif;
+                border-radius: 5px;
             }
             QComboBox {
                 background-color: white;
-                border: 1px solid #ccc;
-                padding: 5px;
+                border: 1px solid #ddd;
+                padding: 8px;
                 font-size: 14px;
+                border-radius: 5px;
             }
             QLineEdit {
                 background-color: white;
-                border: 1px solid #ccc;
-                padding: 5px;
+                border: 1px solid #ddd;
+                padding: 8px;
                 font-size: 14px;
+                border-radius: 5px;
+            }
+            QLabel {
+                font-size: 14px;
+                margin-bottom: 5px;
             }
         """)
+
 
         # --- System Prompt Input ---
         self.system_prompt_label = QLabel("System Prompt:", self)  # Label for system prompt input
@@ -157,6 +165,10 @@ class AudioRecorder(QMainWindow):
         self.stop_play_button.clicked.connect(self.stop_audio_response)  # Connect button to stop function
         self.stop_play_button.setEnabled(False)  # Disable button initially
         layout.addWidget(self.stop_play_button)  # Add button to layout
+
+        # Add spacer for better layout
+        spacer = QSpacerItem(20, 40, QSizePolicy.Minimum, QSizePolicy.Expanding)
+        layout.addItem(spacer)
 
         # Text edit for transcription and LLM response
         self.text_edit = QTextEdit(self)  # Text edit area for displaying text
