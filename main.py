@@ -4,7 +4,7 @@ import pyaudio
 import threading
 import pyttsx3
 import logging
-from PyQt5.QtWidgets import QApplication, QMainWindow, QPushButton, QTextEdit, QVBoxLayout, QWidget, QComboBox, QLabel, QLineEdit, QSpacerItem, QSizePolicy
+from PyQt5.QtWidgets import QApplication, QMainWindow, QPushButton, QTextEdit, QVBoxLayout, QWidget, QComboBox, QLabel, QLineEdit, QSpacerItem, QSizePolicy, QGroupBox, QHBoxLayout
 from PyQt5.QtGui import QFont, QIcon
 from PyQt5.QtCore import pyqtSlot, QThread, pyqtSignal
 from groq import Groq
@@ -69,22 +69,21 @@ class AudioRecorder(QMainWindow):
         """
         self.setWindowTitle(self.title)
         self.setGeometry(self.left, self.top, self.width, self.height)
-        # Set window icon
         self.setWindowIcon(QIcon('M2L_icon.png'))
 
         # Main layout and widget
-        layout = QVBoxLayout()  # Vertical layout for widgets
+        main_layout = QVBoxLayout()
         widget = QWidget()
-        widget.setLayout(layout)
+        widget.setLayout(main_layout)
         self.setCentralWidget(widget)  # Set the main widget
 
         # --- Styling ---
         self.setStyleSheet("""
             QMainWindow {
-                background-color: #f8f8f8; /* Light gray background */
+                background-color: #f0f0f0; /* Light gray background */
             }
             QPushButton {
-                background-color: #2196F3; /* Blue */
+                background-color: #007bff; /* Blue */
                 border: none;
                 color: white;
                 padding: 12px 24px;
@@ -93,14 +92,14 @@ class AudioRecorder(QMainWindow):
                 display: inline-block;
                 font-size: 16px;
                 margin: 8px 4px;
-                border-radius: 8px;
+                border-radius: 5px;
             }
             QPushButton:hover {
-                background-color: #1976D2; /* Darker blue on hover */
+                background-color: #0056b3; /* Darker blue on hover */
             }
             QTextEdit {
                 background-color: white;
-                border: 1px solid #ddd; /* Lighter border */
+                border: 1px solid #ced4da; /* Light gray border */
                 padding: 12px;
                 font-size: 14px;
                 font-family: Arial, Helvetica, sans-serif;
@@ -108,14 +107,14 @@ class AudioRecorder(QMainWindow):
             }
             QComboBox {
                 background-color: white;
-                border: 1px solid #ddd;
+                border: 1px solid #ced4da;
                 padding: 8px;
                 font-size: 14px;
                 border-radius: 5px;
             }
             QLineEdit {
                 background-color: white;
-                border: 1px solid #ddd;
+                border: 1px solid #ced4da;
                 padding: 8px;
                 font-size: 14px;
                 border-radius: 5px;
@@ -124,62 +123,95 @@ class AudioRecorder(QMainWindow):
                 font-size: 14px;
                 margin-bottom: 5px;
             }
+            QGroupBox {
+                border: 1px solid #ced4da;
+                border-radius: 5px;
+                margin-top: 10px; 
+            }
+            QGroupBox::title {
+                subcontrol-origin: margin;
+                subcontrol-position: top left;
+                padding: 0 3px;
+                left: 10px;
+            }
         """)
 
+        # --- Settings Group Box ---
+        settings_group = QGroupBox("Settings")
+        settings_layout = QVBoxLayout()
 
-        # --- System Prompt Input ---
-        self.system_prompt_label = QLabel("System Prompt:", self)  # Label for system prompt input
-        layout.addWidget(self.system_prompt_label)  # Add label to layout
+        # System Prompt Input
+        self.system_prompt_label = QLabel("System Prompt:")
+        settings_layout.addWidget(self.system_prompt_label)
 
-        self.system_prompt_input = QLineEdit(self)  # Text input for system prompt
+        self.system_prompt_input = QLineEdit(self)
         default_prompt = "You are an experienced professional. Please respond to the following interview question in a first-person, detailed, and professional manner."
-        self.system_prompt_input.setText(default_prompt)  # Set default prompt text
-        layout.addWidget(self.system_prompt_input)  # Add text input to layout
+        self.system_prompt_input.setText(default_prompt)
+        settings_layout.addWidget(self.system_prompt_input)
 
-        # Dropdown for model selection
-        self.model_selector = QComboBox(self)  # Dropdown menu for model selection
-        self.model_selector.addItem("llama3-70b-8192")  # Add model options
+        # Model Selection
+        model_layout = QHBoxLayout()
+        model_label = QLabel("Model:")
+        model_layout.addWidget(model_label)
+        self.model_selector = QComboBox(self)
+        self.model_selector.addItem("llama3-70b-8192")
         self.model_selector.addItem("llama-3.1-70b-versatile")
         self.model_selector.addItem("mixtral-8x7b-32768")
         self.model_selector.addItem("gemma2-9b-it")
         self.model_selector.addItem("gemini-1.5-flash")
         self.model_selector.addItem("gemini-1.5-pro")
-        layout.addWidget(self.model_selector)  # Add dropdown menu to layout
+        model_layout.addWidget(self.model_selector)
+        settings_layout.addLayout(model_layout)
 
-        # Buttons
-        self.record_button = QPushButton('Start Recording', self)  # Button to start recording
-        self.record_button.clicked.connect(self.on_click_record)  # Connect button to recording function
-        layout.addWidget(self.record_button)  # Add button to layout
+        settings_group.setLayout(settings_layout)
+        main_layout.addWidget(settings_group)
 
-        self.stop_button = QPushButton('Stop Recording', self)  # Button to stop recording
-        self.stop_button.clicked.connect(self.on_click_stop)  # Connect button to stop function
-        self.stop_button.setEnabled(False)  # Disable button initially
-        layout.addWidget(self.stop_button)  # Add button to layout
+        # --- Controls Group Box ---
+        controls_group = QGroupBox("Controls")
+        controls_layout = QHBoxLayout()
 
-        self.play_button = QPushButton('Play Response Audio', self)  # Button to play audio response
-        self.play_button.clicked.connect(self.play_audio_response)  # Connect button to playback function
-        self.play_button.setEnabled(False)  # Disable button initially
-        layout.addWidget(self.play_button)  # Add button to layout
+        self.record_button = QPushButton('Start Recording', self)
+        self.record_button.clicked.connect(self.on_click_record)
+        controls_layout.addWidget(self.record_button)
 
-        self.stop_play_button = QPushButton('Stop Audio', self)  # Button to stop audio playback
-        self.stop_play_button.clicked.connect(self.stop_audio_response)  # Connect button to stop function
-        self.stop_play_button.setEnabled(False)  # Disable button initially
-        layout.addWidget(self.stop_play_button)  # Add button to layout
+        self.stop_button = QPushButton('Stop Recording', self)
+        self.stop_button.clicked.connect(self.on_click_stop)
+        self.stop_button.setEnabled(False)
+        controls_layout.addWidget(self.stop_button)
+
+        self.play_button = QPushButton('Play Response Audio', self)
+        self.play_button.clicked.connect(self.play_audio_response)
+        self.play_button.setEnabled(False)
+        controls_layout.addWidget(self.play_button)
+
+        self.stop_play_button = QPushButton('Stop Audio', self)
+        self.stop_play_button.clicked.connect(self.stop_audio_response)
+        self.stop_play_button.setEnabled(False)
+        controls_layout.addWidget(self.stop_play_button)
+
+        controls_group.setLayout(controls_layout)
+        main_layout.addWidget(controls_group)
 
         # Add spacer for better layout
         spacer = QSpacerItem(20, 40, QSizePolicy.Minimum, QSizePolicy.Expanding)
-        layout.addItem(spacer)
+        main_layout.addItem(spacer)
+
+        # --- Output Group Box ---
+        output_group = QGroupBox("Output")
+        output_layout = QVBoxLayout()
 
         # Text edit for transcription and LLM response
-        self.text_edit = QTextEdit(self)  # Text edit area for displaying text
-        self.text_edit.setPlaceholderText("Transcription and LLM responses will appear here.")  # Set placeholder text
+        self.text_edit = QTextEdit(self)
+        self.text_edit.setPlaceholderText("Transcription and LLM responses will appear here.")
 
         # Set font size for QTextEdit
         font = QFont()
         font.setPointSize(12)
         self.text_edit.setFont(font)
 
-        layout.addWidget(self.text_edit)  # Add text edit area to layout
+        output_layout.addWidget(self.text_edit)
+        output_group.setLayout(output_layout)
+        main_layout.addWidget(output_group)
 
         self.show()  # Show the window
 
