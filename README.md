@@ -34,9 +34,6 @@ This application allows you to record audio, transcribe it, and get a response f
 * **Cloud Integration:** Explore integration with cloud storage services to allow users to upload and manage audio files.
 * **Offline Mode:** Investigate the feasibility of enabling offline transcription and response generation for specific models.
 
-[![GitHub stats](https://github-readme-stats.vercel.app/api?username=Franklyc&show_icons=true&theme=radical)](https://github.com/anuraghazra/github-readme-stats)
-[![GitHub Streak](https://github-readme-streak-stats.herokuapp.com/?user=Franklyc)](https://git.io/streak-stats)
-
 ## Prerequisites
 
 * **Python 3.7 or higher**
